@@ -1,7 +1,7 @@
 import java.io.*;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 
 public class Person {
     private String personID;
@@ -66,9 +66,9 @@ public class Person {
 
         if (!this.birthdate.equals(birthdate) &&
                 (!this.address.equals(address) ||
-                !this.personID.equals(personID) ||
-                !this.firstName.equals(firstName) ||
-                !this.lastName.equals(lastName))) {
+                        !this.personID.equals(personID) ||
+                        !this.firstName.equals(firstName) ||
+                        !this.lastName.equals(lastName))) {
             return false;
         }
 
@@ -90,7 +90,47 @@ public class Person {
     }
 
     public String addDemeritPoints() {
-        return "Demerit points added successfully.";
+        List<Map.Entry<Date, Integer>> sortedEntries = demeritPoints.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByKey())
+                .toList();
+
+        for (Map.Entry<Date, Integer> entry : sortedEntries) {
+            String offenseDate = entry.toString();
+            float points = entry.getValue();
+
+            if (!isValidDate(offenseDate)) return ("Failed");
+
+            if (points == (int) points && !(points >= 1 && points <= 6)) {
+                return ("Failed");
+            }
+        }
+
+        for (int i = 0; i < sortedEntries.size(); i++) {
+            Date firstDate = sortedEntries.get(i).getKey();
+            int totalPoints = sortedEntries.get(i).getValue();
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(firstDate);
+            calendar.add(Calendar.YEAR, 2);
+            Date endDate = calendar.getTime();
+
+            for (int j = i; j < sortedEntries.size(); j++) {
+                Date checkDate = sortedEntries.get(j).getKey();
+                if (checkDate.before(endDate) || checkDate.equals(endDate)) {
+                    totalPoints += sortedEntries.get(j).getValue();
+                } else {
+                    break;
+                }
+            }
+
+            if ((getAge(birthdate) < 21 && totalPoints > 6) ||
+                    (getAge(birthdate) >= 21 && totalPoints > 12)) {
+                this.isSuspended = true;
+
+            } else this.isSuspended = false;
+        }
+
+        return ("Success");
     }
 
     private boolean isValidPerson(String personID, String address, String birthdate) {
@@ -118,7 +158,27 @@ public class Person {
             return false;
         }
 
-        return birthdate.matches("^\\d{2}-\\d{2}-\\d{4}$");
+        if (!isValidDate(birthdate)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean isValidDate(String date) {
+        try {
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+            simpleDateFormat.setLenient(false);
+            Date tempDate = simpleDateFormat.parse(date);
+            if (tempDate.after(new Date())) {
+                return false;
+            }
+        } catch (ParseException e) {
+            System.out.println("Error parsing date: " + e.getMessage());
+            return false;
+        }
+
+        return true;
     }
 
     public int getAge(String birthdate) {
@@ -135,6 +195,6 @@ public class Person {
             System.out.println("Error parsing date: " + e.getMessage());
         }
 
-        return (int)ageInDays / 365;
+        return (int) ageInDays / 365;
     }
 }
