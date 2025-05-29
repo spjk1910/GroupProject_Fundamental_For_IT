@@ -1,7 +1,11 @@
+import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Objects;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Person {
     private String personID;
@@ -23,37 +27,43 @@ public class Person {
         this.isSuspended = isSuspended;
     }
 
-    public void setPersonID(String personID) {
-        this.personID = personID;
+    public String getPersonID() {
+        return personID;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public String getAddress() {
+        return address;
     }
 
-    public void setBirthdate(String birthdate) {
-        this.birthdate = birthdate;
+    public String getBirthdate() {
+        return birthdate;
     }
 
-    public boolean addPerson() {
+    public HashMap<Date, Integer> getDemeritPoints() {
+        return demeritPoints;
+    }
+
+    public boolean isSuspended() {
+        return isSuspended;
+    }
+
+    public boolean addPerson(Set<Person> personSet) throws IOException {
         if (!isValidPerson(personID, address, birthdate)) {
             return false;
-        }
-
-        try (FileWriter fileWriter = new FileWriter("person.txt", true)) {
-            fileWriter.write(personID + "," + firstName + "," + lastName + "," + address + "," + birthdate + "\n");
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
+        } else if (personSet.stream().anyMatch(p -> p.getPersonID().equals(personID))) {
             return false;
+        } else {
+            personSet.add(this);
+            saveTXT("persons.txt");
+            return true;
         }
     }
 
@@ -92,5 +102,36 @@ public class Person {
         }
 
         return birthdate.matches("^\\d{2}-\\d{2}-\\d{4}$");
+    }
+
+    public void saveTXT(String filePath) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true))) {
+            StringBuilder lineBuilder = new StringBuilder();
+            lineBuilder.append(getPersonID()).append(",")
+                    .append(getFirstName()).append(",")
+                    .append(getLastName()).append(",")
+                    .append(getAddress()).append(",")
+                    .append(getBirthdate()).append(",");
+
+            HashMap<Date, Integer> demeritPoints = getDemeritPoints();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+
+            if (!demeritPoints.isEmpty()) {
+                StringBuilder demeritPointsBuilder = new StringBuilder();
+                for (Date date : demeritPoints.keySet()) {
+                    demeritPointsBuilder.append(dateFormat.format(date)).append(":")
+                            .append(demeritPoints.get(date)).append(";");
+                }
+
+                if (!demeritPointsBuilder.isEmpty()) {
+                    demeritPointsBuilder.setLength(demeritPointsBuilder.length() - 1);
+                }
+
+                lineBuilder.append(demeritPointsBuilder);
+            }
+
+            writer.write(lineBuilder.toString());
+            writer.newLine();
+        }
     }
 }
