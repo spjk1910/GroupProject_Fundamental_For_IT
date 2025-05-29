@@ -1,7 +1,7 @@
-import java.io.FileWriter;
+import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Objects;
 
 public class Person {
     private String personID;
@@ -23,43 +23,70 @@ public class Person {
         this.isSuspended = isSuspended;
     }
 
-    public void setPersonID(String personID) {
-        this.personID = personID;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public void setBirthdate(String birthdate) {
-        this.birthdate = birthdate;
-    }
-
     public boolean addPerson() {
         if (!isValidPerson(personID, address, birthdate)) {
             return false;
         }
 
         try (FileWriter fileWriter = new FileWriter("person.txt", true)) {
-            fileWriter.write(personID + "," + firstName + "," + lastName + "," + address + "," + birthdate + "\n");
+            fileWriter.write(personID + "," + firstName + "," + lastName + "," + address + "," + birthdate);
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error writing to file: " + e.getMessage());
             return false;
         }
     }
 
-    public boolean updatePersonDetails() {
+    public boolean updatePersonDetails() throws IOException {
+        String personID = null;
+        String firstName = null;
+        String lastName = null;
+        String address = null;
+        String birthdate = null;
+        try (FileReader fileReader = new FileReader("person.txt")) {
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String line = bufferedReader.readLine();
 
-        return true;
+            if (line != null) {
+                String[] data = line.split(",");
+                personID = data[0];
+                firstName = data[1];
+                lastName = data[2];
+                address = data[3];
+                birthdate = data[4];
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found: " + e.getMessage());
+            return false;
+        }
+
+        if (getAge(birthdate) < 18 && !this.address.equals(address)) {
+            return false;
+        }
+
+        if (!this.birthdate.equals(birthdate) &&
+                (!this.address.equals(address) ||
+                !this.personID.equals(personID) ||
+                !this.firstName.equals(firstName) ||
+                !this.lastName.equals(lastName))) {
+            return false;
+        }
+
+        if (((personID.charAt(0) - '0') / 2 == 0) && !this.personID.equals(personID)) {
+            return false;
+        }
+
+        if (!isValidPerson(personID, address, birthdate)) {
+            return false;
+        }
+
+        try (FileWriter fileWriter = new FileWriter("person.txt", true)) {
+            fileWriter.write(personID + "," + firstName + "," + lastName + "," + address + "," + birthdate);
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error writing to file: " + e.getMessage());
+            return false;
+        }
     }
 
     public String addDemeritPoints() {
@@ -92,5 +119,22 @@ public class Person {
         }
 
         return birthdate.matches("^\\d{2}-\\d{2}-\\d{4}$");
+    }
+
+    public int getAge(String birthdate) {
+        long ageInDays = 0;
+        long ageInMilliseconds = 0;
+        try {
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+            Date birthDate = simpleDateFormat.parse(birthdate);
+            Date currentDate = new Date();
+
+            ageInMilliseconds = currentDate.getTime() - birthDate.getTime();
+            ageInDays = ageInMilliseconds / (1000 * 60 * 60 * 24);
+        } catch (Exception e) {
+            System.out.println("Error parsing date: " + e.getMessage());
+        }
+
+        return (int)ageInDays / 365;
     }
 }
