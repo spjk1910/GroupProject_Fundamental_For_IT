@@ -27,17 +27,17 @@ public class Person {
         this.isSuspended = isSuspended;
     }
 
-    public boolean addPerson() {
+    public boolean addPerson(String filePath) {
         if (!isValidPerson(personID, address, birthdate)) {
             return false;
         }
 
-        if (isPersonIDExist(personID)) {
+        if (isPersonIDExist(personID, filePath)) {
             System.out.println("Person ID already exists.");
             return false;
         }
 
-        try (FileWriter fileWriter = new FileWriter("person.txt", true)) {
+        try (FileWriter fileWriter = new FileWriter(filePath, true)) {
             fileWriter.write(personID + "," + firstName + "," + lastName + "," + address + "," + birthdate);
             fileWriter.write(System.lineSeparator());
             return true;
@@ -47,14 +47,15 @@ public class Person {
         }
     }
 
-    public boolean updatePersonDetails(String currentPersonID, String newPersonID,
+    public static boolean updatePersonDetails(String currentPersonID, String newPersonID,
                                        String newFirstName, String newLastName,
                                        String newAddress, String newBirthdate) throws IOException {
 
         List<String> allLines = new ArrayList<>();
         boolean found = false;
+        String filePath = "updatePersonDetails.txt";
 
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader("person.txt"))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 String[] data = line.split(",");
@@ -82,7 +83,7 @@ public class Person {
                         return false;
                     }
 
-                    if (((personID.charAt(0) - '0') % 2 == 0) && !this.personID.equals(personID)) {
+                    if (((personID.charAt(0) - '0') % 2 == 0) && !personID.equals(newPersonID)) {
                         return false;
                     }
 
@@ -90,7 +91,7 @@ public class Person {
                         return false;
                     }
 
-                    if (isPersonIDExist(newPersonID) && !newPersonID.equals(currentPersonID)) {
+                    if (isPersonIDExist(newPersonID,filePath) && !newPersonID.equals(currentPersonID)) {
                         return false;
                     }
 
@@ -111,7 +112,7 @@ public class Person {
             return false;
         }
 
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("person.txt", false))) {
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(filePath, false))) {
             for (String l : allLines) {
                 bufferedWriter.write(l);
                 bufferedWriter.newLine();
@@ -124,11 +125,19 @@ public class Person {
         return true;
     }
 
-    public String addDemeritPoints(String currentPersonID, HashMap<String, Integer> newDemeritPoints) {
+    public static String addDemeritPoints(String currentPersonID, HashMap<String, Integer> newDemeritPoints) {
         List<String> allLines = new ArrayList<>();
         boolean found = false;
+        String personID = null;
+        String firstName = null;
+        String lastName = null;
+        String address = null;
+        String birthdate = null;
+        HashMap<String, Integer> demeritPoints = new HashMap<>();
 
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader("person.txt"))) {
+        boolean isSuspended = false;
+
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader("addDemeritPoints.txt"))) {
             StringBuilder line;
             while ((line = new StringBuilder(bufferedReader.readLine())) != null) {
                 String[] data = line.toString().split(",");
@@ -137,11 +146,13 @@ public class Person {
                     continue;
                 }
 
-                String personID = data[0];
-                String birthdate = data[4];
+                personID = data[0];
+                firstName = data[1];
+                lastName = data[2];
+                address = data[3];
+                birthdate = data[4];
                 String demeritPointsStr = data.length > 5 ? data[5] : "";
 
-                HashMap<String, Integer> demeritPoints = new HashMap<>();
                 if (!demeritPointsStr.isEmpty()) {
                     String[] demeritPointsArray = demeritPointsStr.split(";");
                     for (String demeritPoint : demeritPointsArray) {
@@ -188,6 +199,16 @@ public class Person {
                 line.append(entry.getKey()).append(":").append(entry.getValue()).append(";");
             }
 
+            if (line.charAt(line.length() - 1) == ';') {
+                line.deleteCharAt(line.length() - 1);
+            }
+
+            if (isSuspended) {
+                line.append(",true");
+            } else {
+                line.append(",false");
+            }
+
             allLines.add(line.toString());
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
@@ -201,7 +222,7 @@ public class Person {
             return "Failed";
         }
 
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("person.txt", false))) {
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("addDemeritPoints.txt", false))) {
             for (String l : allLines) {
                 bufferedWriter.write(l);
                 bufferedWriter.newLine();
@@ -213,7 +234,7 @@ public class Person {
         return ("Success");
     }
 
-    private boolean isValidPerson(String personID, String address, String birthdate) {
+    private static boolean isValidPerson(String personID, String address, String birthdate) {
         if (personID == null || personID.length() != 10
                 || !(personID.charAt(0) >= '2' && personID.charAt(0) <= '9')
                 || !(personID.charAt(1) >= '2' && personID.charAt(1) <= '9')
@@ -246,7 +267,7 @@ public class Person {
         return true;
     }
 
-    public boolean isValidDate(String dateStr) {
+    public static boolean isValidDate(String dateStr) {
         if (!dateStr.matches("\\d{2}-\\d{2}-\\d{4}")) {
             return false;
         }
@@ -263,7 +284,7 @@ public class Person {
         return true;
     }
 
-    public int getAge(String birthdate) {
+    public static int getAge(String birthdate) {
         long ageInDays = 0;
         long ageInMilliseconds = 0;
         try {
@@ -280,8 +301,8 @@ public class Person {
         return (int) ageInDays / 365;
     }
 
-    private boolean isPersonIDExist(String personID) {
-        try (BufferedReader br = new BufferedReader(new FileReader("person.txt"))) {
+    private static boolean isPersonIDExist(String personID, String filePath) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.startsWith(personID + ",")) {
@@ -294,7 +315,7 @@ public class Person {
         return false;
     }
 
-    public boolean isWithin2Year(String firstDate, String secondDate) {
+    public static boolean isWithin2Year(String firstDate, String secondDate) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         LocalDate date1 = LocalDate.parse(firstDate, formatter);
         LocalDate date2 = LocalDate.parse(secondDate, formatter);
@@ -304,15 +325,14 @@ public class Person {
         return yearsBetween < 2;
     }
 
-    public static void main(String[] args) {
-        Person personClassTest_testCase1_testData1 = new Person("56s_d%&fAB","John","Doe",
-                "32|Highland Street|Melbourne|Victoria|Australia",
-                "15-11-1990",null,false);
-        boolean result = personClassTest_testCase1_testData1.addPerson();
-        if (result) {
-            System.out.println("Person added successfully.");
+    public static void main(String[] args) throws IOException {
+        boolean personClassTest_testCase1_testData3 = Person.updatePersonDetails("675x*&bKLM","675x*&bKLM","Carl","Black",
+                "23|Titch Street|Footscray|Victoria|Australia", "29-02-2000");
+
+        if (personClassTest_testCase1_testData3) {
+            System.out.println("Test Case 1 Passed");
         } else {
-            System.out.println("Failed to add person.");
+            System.out.println("Test Case 1 Failed");
         }
     }
 }
