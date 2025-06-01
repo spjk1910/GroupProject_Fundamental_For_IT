@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -341,7 +342,7 @@ public class TestClassPerson {
                 "32|Highland Street|Melbourne|Victoria|Australia", "19/11/1994");
         //Test Case 5 - Test Data 2: Person is under 18 years old, don't change address (also don't change birthdate)
         //Change personID to invalid one/not exactly 10 character (1st character is odd number) - Person 2
-        boolean personClassTest_testCase5_testData2 = Person.updatePersonDetails("33a#b$cDXY",
+        boolean personClassTest_testCase5_testData2 = Person.updatePersonDetails("23a#b$cDXY",
                 "23a#b$c55DXY","James","Green",
                 "100|Smith Street|Geelong|Victoria|Australia", "01-01-2020");
         //Test Case 5 - Test Data 3: First character of personID is an even,change everything except personID, birthdate
@@ -355,7 +356,7 @@ public class TestClassPerson {
                 "King Street|Melbourne|Victoria|Australia","20-05-1994");
         //Test Case 5 - Test Data 5: First character of personID is an odd number, change personID
         // Only have 1 special character between index 3 and 8 - Person 5
-        boolean personClassTest_testCase5_testData5 = Person.updatePersonDetails("34k!m}@rCD",
+        boolean personClassTest_testCase5_testData5 = Person.updatePersonDetails("55R%^!kmGH",
                 "55R%JJkmGH", "Steve","Chan",
                 "56|Queen Street|Melbourne|Victoria|Australia", "31-12-1985");
 
@@ -365,5 +366,212 @@ public class TestClassPerson {
         assertFalse(personClassTest_testCase5_testData3);
         assertFalse(personClassTest_testCase5_testData4);
         assertFalse(personClassTest_testCase5_testData5);
+    }
+
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+    /**
+     * This is initial data for the test case of the addDemeritPoints method
+     * Using this to verify the result
+     * 9318~~TNFV,Junkynet,Kangtark,5|Titch St|Melbourne|Victoria|Australia,19-11-1994         (Person 1- Over 21 years old)
+     * 2627@@@TNC,Richard,Keorind,4|Burnewang Street|Melbourne|Victoria|Australia,19-10-2005   (Person 2- Under 21 years old)
+     * 3205~~HPNY,Sun,Harrington,124|La Trobe St|Melbourne|Victoria|Australia,25-03-1989       (Person 3- Over 21 years old)
+     * 44!!@@HAND,Keyla,Nelson,113|Little Bourke St|Melbourne|Victoria|Australia,16-03-1998    (Person 4 - Over 21 years old)
+     * 99%100%SSS,Elena,Wilson,27|Swanston St|Melbourne|Victoria|Australia,28-01-2006          (Person 5 - Under 21 years old)
+     * 123@@@ABCD,Jack,Black,45|Collins St|Melbourne|Victoria|Australia,15-05-2004             (Person 6 - Under 21 years old)
+     **/
+    @Test
+    void test_addDemeritPoints_testCase1() throws IOException {
+        // Test case 1: Check the function with person over 21 years old and valid inputs (demerit points > 12)
+
+        //Test Case 1 - Test Data 1: Person 1
+        String personClassTest_testCase1_testData1 = Person.addDemeritPoints("9318~~TNFV",
+                new HashMap<String, Number>() {{
+                    put("01-01-2024", 5);
+                    put("01-04-2024", 5);
+                    put("01-05-2025", 3);
+                }});
+        boolean personClassTest_testCase1_testData1_suspended = Person.getIsSuspended("9318~~TNFV");
+
+        // Asserting that the addDemeritPoints method returns the expected results
+        assertEquals("Success",personClassTest_testCase1_testData1);
+        assertTrue(personClassTest_testCase1_testData1_suspended);
+    }
+
+    @Test
+    void test_addDemeritPoints_testCase2() throws IOException {
+        // Test case 2: Check the function with person over 21 years old and valid inputs (demerit points <= 12)
+
+        //Test Case 2 - Test Data 1: Person 3
+        String personClassTest_testCase2_testData1 = Person.addDemeritPoints("3205~~HPNY",
+                new HashMap<String, Number>() {{
+                    put("01-01-2024", 5);
+                    put("01-04-2024", 5);
+                    put("01-05-2025", 1);
+                }});
+        boolean personClassTest_testCase2_testData1_suspended = Person.getIsSuspended("3205~~HPNY");
+        //Test Case 2 - Test Data 2: Person 4
+        String personClassTest_testCase2_testData2 = Person.addDemeritPoints("44!!@@HAND",
+                new HashMap<String, Number>() {{
+                    put("01-01-2020", 5);
+                    put("01-04-2020", 5);
+                    put("01-05-2025", 2);
+                }});
+        boolean personClassTest_testCase2_testData2_suspended = Person.getIsSuspended("44!!@@HAND");
+
+        // Asserting that the addDemeritPoints method returns the expected results
+        assertEquals("Success",personClassTest_testCase2_testData1);
+        assertFalse(personClassTest_testCase2_testData1_suspended);
+
+        assertEquals("Success",personClassTest_testCase2_testData2);
+        assertFalse(personClassTest_testCase2_testData2_suspended);
+    }
+
+    @Test
+    void test_addDemeritPoints_testCase3() throws IOException {
+        // Test case 3: Check the function with person under 21 years old and valid inputs (demerit points > 6)
+
+        //Test Case 3 - Test Data 1: Person 2
+        String personClassTest_testCase3_testData1 = Person.addDemeritPoints("2627@@@TNC",
+                new HashMap<String, Number>() {{
+                    put("01-01-2024", 2);
+                    put("01-04-2024", 2);
+                    put("01-05-2025", 5);
+                }});
+        boolean personClassTest_testCase3_testData1_suspended = Person.getIsSuspended("2627@@@TNC");
+
+        // Asserting that the addDemeritPoints method returns the expected results
+        assertEquals("Success",personClassTest_testCase3_testData1);
+        assertTrue(personClassTest_testCase3_testData1_suspended);
+    }
+
+    @Test
+    void test_addDemeritPoints_testCase4() throws IOException {
+        // Test case 4: Check the function with person under 21 years old and valid inputs (demerit points < 6)
+
+        //Test Case 4 - Test Data 1: Person 5
+        String personClassTest_testCase4_testData1 = Person.addDemeritPoints("99%100%SSS",
+                new HashMap<String, Number>() {{
+                    put("01-01-2024", 1);
+                    put("01-04-2024", 1);
+                    put("01-05-2025", 1);
+                }});
+        boolean personClassTest_testCase4_testData1_suspended = Person.getIsSuspended("99%100%SSS");
+        //Test Case 4 - Test Data 2: Person 6 (also include point is a whole number but in float format)
+        String personClassTest_testCase4_testData2 = Person.addDemeritPoints("123@@@ABCD",
+                new HashMap<String, Number>() {{
+                    put("01-01-2020", 2);
+                    put("01-04-2020", 2.0);
+                    put("01-05-2025", 2);
+                }});
+        boolean personClassTest_testCase4_testData2_suspended = Person.getIsSuspended("123@@@ABCD");
+
+        // Asserting that the addDemeritPoints method returns the expected results
+        assertEquals("Success",personClassTest_testCase4_testData1);
+        assertFalse(personClassTest_testCase4_testData1_suspended);
+
+        assertEquals("Success",personClassTest_testCase4_testData2);
+        assertFalse(personClassTest_testCase4_testData2_suspended);
+    }
+
+    @Test
+    void test_addDemeritPoints_testCase5() throws IOException {
+        // Test case 5: Check the function with invalid date format
+
+        //Test Case 5 - Test Data 1: Person 1
+        String personClassTest_testCase5_testData1 = Person.addDemeritPoints("9318~~TNFV",
+                new HashMap<String, Number>() {{
+                    put("01/01/2024", 5);
+                    put("01-04-2024", 5);
+                    put("01-05-2025", 3);
+                }});
+        boolean personClassTest_testCase5_testData1_suspended = Person.getIsSuspended("9318~~TNFV");
+        //Test Case 5 - Test Data 2: Person 3
+        String personClassTest_testCase5_testData2 = Person.addDemeritPoints("3205~~HPNY",
+                new HashMap<String, Number>() {{
+                    put("01-01-2020", 5);
+                    put("01-04-2020", 5);
+                    put("01/05/2025", 3);
+                }});
+        boolean personClassTest_testCase5_testData2_suspended = Person.getIsSuspended("3205~~HPNY");
+        //Test Case 5 - Test Data 3: Person 4
+        String personClassTest_testCase5_testData3 = Person.addDemeritPoints("44!!@@HAND",
+                new HashMap<String, Number>() {{
+                    put("01-01-2024", 4);
+                    put("01-04-2024", 4);
+                    put("12-23-2025", 3);
+                }});
+        boolean personClassTest_testCase5_testData3_suspended = Person.getIsSuspended("44!!@@HAND");
+        //Test Case 5 - Test Data 4: Person 2
+        String personClassTest_testCase5_testData4 = Person.addDemeritPoints("2627@@@TNC",
+                new HashMap<String, Number>() {{
+                    put("01-01-2020", 5);
+                    put("01-04-2024", 5);
+                    put("2025-05-01", 3);
+                }});
+        boolean personClassTest_testCase5_testData4_suspended = Person.getIsSuspended("2627@@@TNC");
+        //Test Case 5 - Test Data 5: Person 5
+        String personClassTest_testCase5_testData5 = Person.addDemeritPoints("99%100%SSS",
+                new HashMap<String, Number>() {{
+                    put("01-01-2020", 1);
+                    put("01,04,2020", 4);
+                    put("01-05-2025", 3);
+                }});
+        boolean personClassTest_testCase5_testData5_suspended = Person.getIsSuspended("99%100%SSS");
+
+        // Asserting that the addDemeritPoints method returns the expected results
+        assertEquals("Failed",personClassTest_testCase5_testData1);
+        assertTrue(personClassTest_testCase5_testData1_suspended); // Keep old suspended status
+
+        assertEquals("Failed",personClassTest_testCase5_testData2);
+        assertFalse(personClassTest_testCase5_testData2_suspended); // Keep old suspended status
+
+        assertEquals("Failed",personClassTest_testCase5_testData3);
+        assertFalse(personClassTest_testCase5_testData3_suspended); // Keep old suspended status
+
+        assertEquals("Failed",personClassTest_testCase5_testData4);
+        assertTrue(personClassTest_testCase5_testData4_suspended); // Keep old suspended status
+
+        assertEquals("Failed",personClassTest_testCase5_testData5);
+        assertFalse(personClassTest_testCase5_testData5_suspended); // Keep old suspended status
+    }
+
+    @Test
+    void test_addDemeritPoints_testCase6() throws IOException {
+        // Test case 6: Check the function with invalid points (not a whole number between 1 and 6)
+
+        //Test Case 6 - Test Data 1: Not a whole number but in range between 1 and 6 - Person 1
+        String personClassTest_testCase6_testData1 = Person.addDemeritPoints("9318~~TNFV",
+                new HashMap<String, Number>() {{
+                    put("01-01-2024", 5.5);
+                    put("01-04-2024", 5);
+                    put("01-05-2025", 3);
+                }});
+        boolean personClassTest_testCase6_testData1_suspended = Person.getIsSuspended("9318~~TNFV");
+        //Test Case 6 - Test Data 2: A whole number but not in between 1 and 6 - Person 3
+        String personClassTest_testCase6_testData2 = Person.addDemeritPoints("3205~~HPNY",
+                new HashMap<String, Number>() {{
+                    put("01-01-2020", 5);
+                    put("01-04-2020", 5);
+                    put("01-05-2025", 0);
+                }});
+        boolean personClassTest_testCase6_testData2_suspended = Person.getIsSuspended("3205~~HPNY");
+        //Test Case 6 - Test Data 3: Not a whole number and not in range between 1 and 6 - Person 4
+        String personClassTest_testCase6_testData3 = Person.addDemeritPoints("44!!@@HAND",
+                new HashMap<String, Number>() {{
+                    put("01-01-2024", 4);
+                    put("01-04-2024", 8.7);
+                    put("12-23-2025", 3);
+                }});
+        boolean personClassTest_testCase6_testData3_suspended = Person.getIsSuspended("44!!@@HAND");
+
+        // Asserting that the addDemeritPoints method returns the expected results
+        assertEquals("Failed",personClassTest_testCase6_testData1);
+        assertTrue(personClassTest_testCase6_testData1_suspended); // Keep old suspended status
+
+        assertEquals("Failed",personClassTest_testCase6_testData2);
+        assertFalse(personClassTest_testCase6_testData2_suspended); // Keep old suspended status
+
+        assertEquals("Failed",personClassTest_testCase6_testData3);
+        assertFalse(personClassTest_testCase6_testData3_suspended); // Keep old suspended status
     }
 }

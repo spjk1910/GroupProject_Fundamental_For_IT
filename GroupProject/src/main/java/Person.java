@@ -13,11 +13,11 @@ public class Person {
     private String lastName;
     private String address;
     private String birthdate;
-    private HashMap<String, Integer> demeritPoints;
+    private HashMap<String, Number> demeritPoints;
     private boolean isSuspended;
 
     public Person(String personID, String firstName, String lastName, String address, String birthdate,
-                  HashMap<String, Integer> demeritPoints, boolean isSuspended) {
+                  HashMap<String, Number> demeritPoints, boolean isSuspended) {
         this.personID = personID;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -125,96 +125,102 @@ public class Person {
         return true;
     }
 
-    public static String addDemeritPoints(String currentPersonID, HashMap<String, Integer> newDemeritPoints) {
+    public static String addDemeritPoints(String currentPersonID, HashMap<String, Number> newDemeritPoints) {
         List<String> allLines = new ArrayList<>();
         boolean found = false;
-        String personID = null;
-        String firstName = null;
-        String lastName = null;
-        String address = null;
-        String birthdate = null;
-        HashMap<String, Integer> demeritPoints = new HashMap<>();
-
-        boolean isSuspended = false;
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader("addDemeritPoints.txt"))) {
-            StringBuilder line;
-            while ((line = new StringBuilder(bufferedReader.readLine())) != null) {
-                String[] data = line.toString().split(",");
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                String[] data = line.split(",");
                 if (data.length < 5) {
-                    allLines.add(line.toString());
+                    allLines.add(line);
                     continue;
                 }
 
-                personID = data[0];
-                firstName = data[1];
-                lastName = data[2];
-                address = data[3];
-                birthdate = data[4];
-                String demeritPointsStr = data.length > 5 ? data[5] : "";
+                String personID = data[0];
+                if (!personID.equals(currentPersonID)) {
+                    allLines.add(line);
+                    continue;
+                }
 
-                if (!demeritPointsStr.isEmpty()) {
-                    String[] demeritPointsArray = demeritPointsStr.split(";");
-                    for (String demeritPoint : demeritPointsArray) {
-                        String[] parts = demeritPoint.split(":");
+                found = true;
+
+                String firstName = data[1];
+                String lastName = data[2];
+                String address = data[3];
+                String birthdate = data[4];
+                HashMap<String, Number> demeritPoints = new HashMap<>();
+
+                if (data.length > 5 && !data[5].isEmpty()) {
+                    String[] demeritPointsArray = data[5].split(";");
+                    for (String dp : demeritPointsArray) {
+                        String[] parts = dp.split(":");
                         if (parts.length == 2) {
                             demeritPoints.put(parts[0], Integer.parseInt(parts[1]));
                         }
                     }
                 }
 
-                if (personID.equals(currentPersonID)) {
-                    found = true;
+                for (Map.Entry<String, Number> entry : newDemeritPoints.entrySet()) {
+                    String offenseDate = entry.getKey();
+                    Number points = entry.getValue();
 
-                    for (Map.Entry<String, Integer> entry : newDemeritPoints.entrySet()) {
-                        String offenseDate = entry.getKey();
-                        int pts = entry.getValue();
-
-                        if (!isValidDate(offenseDate)) return "Failed";
-
-                        if (pts < 1 || pts > 6) return "Failed";
+                    if ((points instanceof Float || points instanceof Double) && points.doubleValue() != points.intValue()) {
+                        return "Failed";
+                    }
+                    if (!(points instanceof Integer) && !(points instanceof Float) && !(points instanceof Double)) {
+                        return "Failed";
                     }
 
-                    demeritPoints.putAll(newDemeritPoints);
-                    int age = getAge(birthdate);
-                    isSuspended = false;
-                    int totalPoints = 0;
+                    if (!isValidDate(offenseDate) || points.intValue() < 1 || points.intValue() > 6) {
+                        return "Failed";
+                    }
 
-                    for (int i = 0; i < demeritPoints.size(); i++) {
-                        for (int j = i; j < demeritPoints.size(); j++) {
-                            if (isWithin2Year(demeritPoints.keySet().toArray()[i].toString(),
-                                    demeritPoints.keySet().toArray()[j].toString())) {
-                                totalPoints += demeritPoints.get(demeritPoints.keySet().toArray()[i]) +
-                                        demeritPoints.get(demeritPoints.keySet().toArray()[j]);
-                            }
+                    demeritPoints.put(offenseDate, points);
+                }
+
+                // Determine suspension
+                int age = getAge(birthdate);
+                boolean isSuspended = false;
+                List<String> sortedDates = new ArrayList<>(demeritPoints.keySet());
+                Collections.sort(sortedDates);
+
+                for (int i = 0; i < sortedDates.size(); i++) {
+                    String date1 = sortedDates.get(i);
+                    int sum = 0;
+                    for (int j = i; j < sortedDates.size(); j++) {
+                        String date2 = sortedDates.get(j);
+                        if (isWithin2Year(date1, date2)) {
+                            sum += demeritPoints.get(date2).intValue();
                         }
-
-                        if ((age < 21 && totalPoints > 6) || (age >= 21 && totalPoints > 12)) isSuspended = true;
+                    }
+                    if ((age < 21 && sum > 6) || (age >= 21 && sum > 12)) {
+                        isSuspended = true;
+                        break;
                     }
                 }
-            }
-            line = new StringBuilder(currentPersonID + "," + firstName + "," + lastName + "," + address + "," +
-                    birthdate + ",");
-            for (Map.Entry<String, Integer> entry : demeritPoints.entrySet()) {
-                line.append(entry.getKey()).append(":").append(entry.getValue()).append(";");
-            }
 
-            if (line.charAt(line.length() - 1) == ';') {
-                line.deleteCharAt(line.length() - 1);
-            }
+                StringBuilder newLine = new StringBuilder();
+                newLine.append(personID).append(",")
+                        .append(firstName).append(",")
+                        .append(lastName).append(",")
+                        .append(address).append(",")
+                        .append(birthdate).append(",");
 
-            if (isSuspended) {
-                line.append(",true");
-            } else {
-                line.append(",false");
-            }
+                for (Map.Entry<String, Number> entry : demeritPoints.entrySet()) {
+                    newLine.append(entry.getKey()).append(":").append(entry.getValue()).append(";");
+                }
+                if (newLine.charAt(newLine.length() - 1) == ';') {
+                    newLine.setLength(newLine.length() - 1);
+                }
 
-            allLines.add(line.toString());
-        } catch (FileNotFoundException e) {
-            System.out.println("File not found");
-            return "Failed";
+                newLine.append(",").append(isSuspended ? "true" : "false");
+                allLines.add(newLine.toString());
+            }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("Error reading file: " + e.getMessage());
+            return "Failed";
         }
 
         if (!found) {
@@ -227,11 +233,12 @@ public class Person {
                 bufferedWriter.write(l);
                 bufferedWriter.newLine();
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.out.println("Error writing file: " + e.getMessage());
             return "Failed";
         }
-        return ("Success");
+
+        return "Success";
     }
 
     private static boolean isValidPerson(String personID, String address, String birthdate) {
@@ -243,7 +250,7 @@ public class Person {
             return false;
         }
 
-        String specialCharacter = "/*!@#$%^&*()\"{}_[]|\\?/<>,.";
+        String specialCharacter = "~!@#$%^&*(){}[]|;':\"<>,./?`";
         int countSpecialCharacter = 0;
         for (int i = 2; i <= 7; i++) {
             if (specialCharacter.contains(String.valueOf(personID.charAt(i)))) {
@@ -325,15 +332,36 @@ public class Person {
         return yearsBetween < 2;
     }
 
-    public static void main(String[] args) throws IOException {
-        boolean personClassTest_testCase1_testData3 = Person.updatePersonDetails("675x*&bKLM","675x*&bKLM","Carl","Black",
-                "23|Titch Street|Footscray|Victoria|Australia", "29-02-2000");
+    public static boolean getIsSuspended(String personID) throws IOException {
+        File file = new File("addDemeritPoints.txt");
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        String line;
 
-        if (personClassTest_testCase1_testData3) {
-            System.out.println("Test Case 1 Passed");
-        } else {
-            System.out.println("Test Case 1 Failed");
+        while ((line = reader.readLine()) != null) {
+            if (line.startsWith(personID + ",")) {
+                String[] parts = line.split(",");
+                String suspendedPart = parts[parts.length - 1].trim();
+
+                reader.close();
+
+                return suspendedPart.equalsIgnoreCase("true");
+            }
         }
+
+        reader.close();
+        throw new IllegalArgumentException("Person ID not found: " + personID);
+    }
+
+    public static void main(String[] args) throws IOException {
+        String personClassTest_testCase4_testData2 = Person.addDemeritPoints("123@@@ABCD",
+                new HashMap<String, Number>() {{
+                    put("01-01-2020", 2);
+                    put("01-04-2020", 2.0);
+                    put("01-05-2025", 2);
+                }});
+        boolean personClassTest_testCase1_testData2_suspended = Person.getIsSuspended("123@@@ABCD");
+        System.out.println("Test Case 2: " + personClassTest_testCase4_testData2);
+        System.out.println("Is Suspended: " + personClassTest_testCase1_testData2_suspended);
     }
 }
 
