@@ -1,0 +1,35 @@
+name: GitHub Actions Java test workflow # Workflow name
+run-name: Running tests on GitHub Actions
+
+on: [push] # Trigger the workflow on push events
+
+jobs:
+  java-test: # Job name
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        # Checks out the repository so you can access its contents in later steps
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt' # AdoptOpenJDK distribution
+          java-version: '21'    # Java version 21
+
+      - name: Run tests
+        run: |
+          cd GroupProject
+          mvn test
+        # Changes to the correct directory where pom.xml exists and runs Maven tests
+
+  another-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: List files
+        run: ls -la
