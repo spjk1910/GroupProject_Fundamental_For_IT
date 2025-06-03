@@ -1,6 +1,0 @@
-9318~~TNFV,Junkynet,Kangtark,5|Titch St|Melbourne|Victoria|Australia,19-11-1994,01-04-2024:5;01-01-2024:5;01-05-2025:3,true
-2627@@@TNC,Richard,Keorind,4|Burnewang Street|Melbourne|Victoria|Australia,19-10-2005,01-04-2024:2;01-01-2024:2;01-05-2025:5,true
-3205~~HPNY,Sun,Harrington,124|La Trobe St|Melbourne|Victoria|Australia,25-03-1989,01-04-2024:5;01-01-2024:5;01-05-2025:1,false
-44!!@@HAND,Keyla,Nelson,113|Little Bourke St|Melbourne|Victoria|Australia,16-03-1998,01-01-2020:5;01-04-2020:5;01-05-2025:2,false
-99%100%SSS,Elena,Wilson,27|Swanston St|Melbourne|Victoria|Australia,28-01-2006,01-04-2024:1;01-01-2024:1;01-05-2025:1,false
-123@@@ABCD,Jack,Black,45|Collins St|Melbourne|Victoria|Australia,15-05-2004,01-01-2020:2;01-04-2020:2.0;01-05-2025:2,false
