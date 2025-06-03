@@ -1,3 +1,8 @@
+// If any error occurs during testing, please delete addPerson.txt if it exists,
+// as duplicate personIDs can cause issues.
+// Additionally, replace the current updatePersonDetails.txt and addDemeritPoints.txt
+// files with the versions provided in the Initial Data folder.
+
 import java.io.*;
 import java.text.DateFormat;
 import java.text.ParseException;
