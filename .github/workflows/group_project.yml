@@ -1,36 +1,35 @@
 name: GitHub Actions Java test workflow # Workflow name
-run-name: Running tests on github actions
+run-name: Running tests on GitHub Actions
+
 on: [push] # Trigger the workflow on push events
+
 jobs:
   java-test: # Job name
-    runs-on: ubuntu-latest # Configures the job to run on the latest version of an Ubuntu Linux runner.  
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner
+
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
-        # The uses keyword specifies that this step will run v4 of the actions/checkout action. 
-        # This is an action that checks out your repository onto the runner,
-        #  allowing you to run scripts or other actions against your code (such as build and test tools). 
-        # You should use the checkout action any time your workflow will use the repository's code.
-      
-      - name: Setup java # Install Java on the runner
+        # Checks out the repository so you can access its contents in later steps
+
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'adopt'
-          # The distribution of Java to install. In this case, it specifies the AdoptOpenJDK distribution. 
-          # See https://github.com/actions/setup-java?tab=readme-ov-file#supported-distributions for supported distributions.
-          java-version: '21'  # The version of Java to install in the job runner.
+          distribution: 'adopt' # AdoptOpenJDK distribution
+          java-version: '21'    # Java version 21
 
       - name: Run tests
-      - run: |
-             cd GroupProject
-             mvn test
-
-        # This step runs the command mvn test, which is a Maven command to run the tests in your project.
-        # Maven is a build automation tool used primarily for Java projects. 
-        # The tests are defined in your project's source code and will be executed by Maven.
+        run: |
+          cd GroupProject
+          mvn test
+        # Changes to the correct directory where pom.xml exists and runs Maven tests
 
   another-job:
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: List files
         run: ls -la
